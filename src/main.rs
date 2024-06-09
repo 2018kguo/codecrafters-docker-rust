@@ -76,14 +76,11 @@ fn main() -> Result<()> {
     let to_command_path = temp_dir
         .path()
         .join(command.strip_prefix('/').unwrap_or(command));
-    // create parent directories before copying the command executable
-    //std::fs::create_dir_all(to_command_path.parent().unwrap())?;
    
     download_image_from_docker_and_store_in_filesystem(&image, temp_dir.path())?;
     
     // create parent directories before copying the command executable
     std::fs::create_dir_all(to_command_path.parent().unwrap())?;
-
     // copy the command executable to the temporary directory
     std::fs::copy(command, to_command_path.clone())?;
 
@@ -91,12 +88,14 @@ fn main() -> Result<()> {
     unix_fs::chroot(temp_dir.path())?;
     // chdir to root since chroot doesn't change the working directory
     std::env::set_current_dir("/")?;
+
     // check that /dev/null exists in the chroot
     if !Path::new("dev/null").exists() {
         // create /dev/null if it doesn't exist
         std::fs::create_dir_all("dev")?;
         std::fs::File::create("dev/null")?;
     }
+
     // chroot doesn't change the working directory so commands that interact
     // with the filesystem may not work as expected unless we do this right after chroot
     unshare_pid()?;
