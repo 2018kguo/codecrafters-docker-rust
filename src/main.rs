@@ -38,7 +38,7 @@ fn download_image_from_docker_and_store_in_filesystem(image: &str, temp_dir_path
     let json_response: serde_json::Value = serde_json::from_str(&manifest_response.text()?)?;
     let layers = json_response["layers"].as_array().unwrap();
 
-    // lastsly, download the layers and unpack them to the temporary directory
+    // lastly, download the layers and unpack them to the temporary directory
 //    Object({"config": Object({"digest": String("sha256:1d34ffeaf190be23d3de5a8de0a436676b758f48f835c3a2d4768b798c15a7f1"), "mediaType": String("application/vnd.docker.container.image.
 //v1+json"), "size": Number(1472)}), "layers": Array([Object({"digest": String("sha256:d25f557d7f31bf7acfac935859b5153da41d13c41f2b468d16f729a5b883634f"), "mediaType": String("application/vnd.dock
 //er.image.rootfs.diff.tar.gzip"), "size": Number(3622094)})]), "mediaType": String("application/vnd.docker.distribution.manifest.v2+json"), "schemaVersion": Number(2)})
