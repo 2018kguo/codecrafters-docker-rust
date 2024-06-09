@@ -1,7 +1,20 @@
 use anyhow::{Context, Result};
+#[cfg(target_os = "linux")]
+use nix::sched::{unshare, CloneFlags};
 use std::io::{self, Write};
 use std::os::unix::fs as unix_fs;
 use tempfile::tempdir;
+
+#[cfg(target_os = "linux")]
+fn unshare_pid() -> Result<()> {
+    unshare(CloneFlags::CLONE_NEWPID)?;
+    Ok(())
+}
+
+#[cfg(not(target_os = "linux"))]
+fn unshare_pid() -> Result<()> {
+    Ok(())
+}
 
 // Usage: your_docker.sh run <image> <command> <arg1> <arg2> ...
 fn main() -> Result<()> {
@@ -30,6 +43,9 @@ fn main() -> Result<()> {
 
     // chroot to the temporary directory
     unix_fs::chroot(temp_dir.path())?;
+    // chroot doesn't change the working directory so commands that interact
+    // with the filesystem may not work as expected unless we do this right after chroot
+    unshare_pid()?;
 
     let output = std::process::Command::new(command)
         .args(command_args)
@@ -41,14 +57,12 @@ fn main() -> Result<()> {
             )
         })?;
 
-    //println!("{}", output.status.code().unwrap());
-    //if output.status.success() {
     let std_out = std::str::from_utf8(&output.stdout)?;
     let std_err = std::str::from_utf8(&output.stderr)?;
     print!("{}", std_out);
     eprint!("{}", std_err);
     io::stdout().flush()?;
-    //} else {
+
     let exit_status = output.status.code().unwrap_or(1);
     std::process::exit(exit_status);
     //}
