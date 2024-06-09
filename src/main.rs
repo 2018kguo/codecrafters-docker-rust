@@ -23,7 +23,8 @@ fn main() -> Result<()> {
         eprint!("{}", std_err);
         io::stdout().flush()?;
     } else {
-        std::process::exit(1);
+        let exit_status = output.status.code().unwrap();
+        std::process::exit(exit_status);
     }
 
     Ok(())
